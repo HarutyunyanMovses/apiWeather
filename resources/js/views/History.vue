@@ -19,12 +19,11 @@
 <script>
 import axios from "axios";
 import Spin from '../components/UI/Spinner';
+import {mapActions, mapState, mapGetters, mapMutations} from 'vuex'
 
 export default {
     data() {
         return {
-            arr: [],
-            spin: true,
             sortBy: 'age',
             sortDesc: false,
             fields: [
@@ -40,19 +39,33 @@ export default {
       Spin
     },
     mounted() {
+        this.getWeathers();
+        this.spin = false
         axios.get(`api/history`)
             .then(res => {
-                this.items = res.data.weathers
+                this.items = res.data.data
                 this.spin = false
         })
     },
+    computed: {
+        ...mapGetters({
+            weathers: 'weathers'
+        }),
+        ...mapState({
+            spin: state => state.spin,
+            weathers: state => state.weathers,
+        })
+
+    },
     methods: {
-        showItem(val) {
-            axios.get(`api/history/${val.created_at}`)
-                .then(res => {
-                    console.log(res)
-                })
-        }
+        ...mapActions({
+            getWeathers: 'getWeathers',
+            createWeather: 'createWeather'
+        }),
+        ...mapMutations({
+            load_items: 'load_items',
+            show_weather: 'show_weather'
+        }),
     }
 }
 </script>

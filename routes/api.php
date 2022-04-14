@@ -24,4 +24,4 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::post('search', [SearchController::class, 'search']);
 Route::post('/search-weather', [SearchController::class, 'searchWhether']);
 
-Route::resource('history', WeatherController::class);
+Route::resource('history', WeatherController::class)->only('store', 'index');

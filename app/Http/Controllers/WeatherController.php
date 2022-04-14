@@ -2,21 +2,30 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Weather;
+use App\Classes\Contracts\Services\WeatherService;
+use App\Http\Requests\WeatherStoreRequest;
+use App\Http\Resources\WeatherResource;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class WeatherController extends Controller
 {
+
+    private WeatherService $obWeatherService;
+
+    public function __construct(WeatherService $obWeatherService)
+    {
+        $this->obWeatherService = $obWeatherService;
+    }
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return AnonymousResourceCollection
      */
-    public function index()
+    public function index(): AnonymousResourceCollection
     {
-        $weathers = Weather::whereRaw('id % 5 = 1')->get();
-        return response()->json(['weathers' => $weathers]);
-
+        $weathers = $this->obWeatherService->index();
+        return WeatherResource::collection($weathers);
     }
 
     /**
@@ -32,33 +41,21 @@ class WeatherController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @param  WeatherStoreRequest  $request
+     * @return WeatherResource
      */
-    public function store(Request $request)
+    public function store(WeatherStoreRequest $request): WeatherResource
     {
-        Weather::create($request->all());
-        return response()->json(['data' =>'Created'],200);
+        $weathers = $this->obWeatherService->store($request);
+        return new WeatherResource($weathers);
     }
-
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($created_at)
-    {
-        return response()->json(['data' => Weather::where('created_at', '=', $created_at)->get()]);
-    }
-
     /**
      * Show the form for editing the specified resource.
      *
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function edit($id)
+    public function edit(int $id)
     {
         //
     }

@@ -2,25 +2,49 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\SearchModel;
+use App\Classes\Contracts\Services\SearchService;
+use App\Http\Resources\SearchResource;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Http\JsonResponse;
 
 class SearchController extends Controller
 {
-    public function search(Request $request) {
-        $cities = SearchModel::where("name", "LIKE", $request->search . '%')->skip(0)->take(100)->get();
-        if(count($cities) > 0) {
-            return  $cities;
-        } else {
-            return "Empty";
-        }
+
+    /**
+     * url for openWeather site
+     */
+    private const URL = 'https://api.openweathermap.org/data/2.5/forecast';
+
+
+    private SearchService $obSearchService;
+
+    public function __construct(SearchService $obSearchService)
+    {
+        $this->obSearchService = $obSearchService;
     }
 
-    public function searchWhether(Request $request){
+
+    /**
+     * @param Request $request
+     * @return AnonymousResourceCollection
+     */
+    public function search(Request $request): AnonymousResourceCollection
+    {
+        $cities = $this->obSearchService->search($request->search);
+        return SearchResource::collection($cities);
+    }
+
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function searchWhether(Request $request)
+    {
         $apiKey = config('services.openweather.key');
-        $response = Http::get('https://api.openweathermap.org/data/2.5/forecast?lat='.$request->lat.'&lon='.$request->lng.'&appid='.$apiKey.'');
+        $response = Http::get(self::URL . '?lat=' . $request->lat . '&lon=' . $request->lng . '&appid=' . $apiKey . '');
         return $response->json();
-}
+    }
+
 }

@@ -4,8 +4,8 @@
             <MyInput :search="search" @search="loadSearchingParams" @spin="spinTrue"></MyInput>
         </div>
         <Spin v-if="spin"></Spin>
-        <div v-for="s in result" class="searchItems" v-if="itemList">
-            <div @click="showList(s)"> {{s.name }}</div>
+        <div v-for="data in results" class="searchItems" v-if="itemList">
+            <div @click="showList(data)"> {{data.name }}</div>
         </div>
         <div class="weatherResponseParent">
             <div v-if="info != null" class="container weatherResponse">
@@ -50,7 +50,7 @@ export default {
             spin: null,
             search: '',
             itemList: null,
-            result: '',
+            results: '',
             info: null,
             city: ''
         }
@@ -66,39 +66,42 @@ export default {
         loadSearchingParams(city) {
             axios.post('/api/search', {search: city})
                 .then(res => {
-                    this.result = res.data;
+                    this.results = res.data.data;
                     this.itemList = true
                     this.spin = false;
-                })
+                }) //storage
         },
         showList (val) {
             this.city = val
             this.itemList = false
             this.search = val.name
             var arr = []
-                axios.post(`/api/search-weather/`, {
-                    lat: val.lat,
-                    lng: val.lng
-                })
-                    .then(res => {
-                        for(let i = 0; i<res.data.list.length; i++) {
-                            if(i % 8 == 0) {
-                                arr.push(res.data.list[i])
-                                axios.post('api/history', {
-                                    city_name: val.name,
-                                    dt_txt: res.data.list[i].dt_txt,
-                                    temp: res.data.list[i].main.temp - 276.76,
-                                    description: res.data.list[i].weather[0].description,
-                                    speed: res.data.list[i].wind.speed,
-                                    humidity: res.data.list[i].main.humidity,
-                                    list_pop: res.data.list[i].pop,
-                                    weather_icon: res.data.list[i].weather[0].icon
-                                })
-                                    .then(console.log('successfully inserted'))
-                            }
-                        }
-                        this.info = arr;
-                    })
+            axios.post(`/api/search-weather/`, {
+                lat: val.lat,
+                lng: val.lng
+            }).then(res => {
+                for (let i = 0; i < res.data.list.length; i++) {
+                    if(i % 8 === 0) {
+                        arr.push(res.data.list[i])
+                        console.log(res)
+                        axios.post('api/history', {
+                            city_name: val.name,
+                            dt_txt: res.data.list[i].dt_txt,
+                            temp: res.data.list[i].main.temp - 276.76,
+                            description: res.data.list[i].weather[0].description,
+                            speed: res.data.list[i].wind.speed,
+                            humidity: res.data.list[i].main.humidity,
+                            list_pop: res.data.list[i].pop,
+                            weather_icon: res.data.list[i].weather[0].icon
+                        })
+                            .then(()=>{
+                                console.log('successfully inserted')
+                            })
+
+                    }
+                }
+                this.info = arr;
+            })
 
         }
     },
@@ -106,6 +109,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import url('https://fonts.googleapis.com/css2?family=Marcellus&display=swap');
+
 .parentDiv{
     text-align: center;
     position: absolute;
@@ -137,8 +142,6 @@ export default {
         }
     }
 }
-@import url('https://fonts.googleapis.com/css2?family=Marcellus&display=swap');
-
 html,
 body {
     height: 100%
